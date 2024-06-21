@@ -42,10 +42,56 @@ namespace CondorHalcon.URPRenderFeatures
             private readonly Material occluderMaterial;
             private FilteringSettings occluderFilteringSettings;
 
-            public ViewSpaceNormalsTexturePass(RenderPassEvent renderPassEvent, LayerMask layerMask, ViewSpaceNormalsTextureSettings settings, Shader shader, Shader occluderShader) { }
-            public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor) { }
-            public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData) { }
-            public override void OnCameraCleanup(CommandBuffer cmd) { }
+            public ViewSpaceNormalsTexturePass(RenderPassEvent renderPassEvent, LayerMask layerMask, ViewSpaceNormalsTextureSettings settings, Shader shader, Shader occluderShader)
+            {
+                this.shaderTagIdList = new List<ShaderTagId>() {
+                new ShaderTagId("UniversalForward"),
+                new ShaderTagId("UniversalForwardOnly"),
+                new ShaderTagId("LightweightForward"),
+                new ShaderTagId("SRPDefaultUnlit"),
+            };
+                this.renderPassEvent = renderPassEvent;
+                this.settings = settings;
+                this.normals.Init("_SceneViewSpaceNormals");
+                this.normalsMaterial = new Material(shader);
+                this.filteringSettings = new FilteringSettings(RenderQueueRange.opaque, layerMask);
+                this.occluderMaterial = new Material(occluderShader);
+                this.occluderFilteringSettings = new FilteringSettings(RenderQueueRange.opaque, (LayerMask)int.MaxValue);
+            }
+            public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
+            {
+                RenderTextureDescriptor normalsTextureDescriptor = cameraTextureDescriptor;
+                normalsTextureDescriptor.colorFormat = settings.colorFormat;
+                normalsTextureDescriptor.depthBufferBits = settings.depthBufferBits;
+
+                cmd.GetTemporaryRT(normals.id, normalsTextureDescriptor, settings.filterMode);
+                ConfigureTarget(normals.Identifier());
+                ConfigureClear(ClearFlag.All, settings.backgroundColor);
+            }
+            public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
+            {
+                if (!normalsMaterial) { return; }
+                CommandBuffer cmd = CommandBufferPool.Get();
+                using (new ProfilingScope(cmd, new ProfilingSampler("SceneViewSpaceNormalsTexture")))
+                {
+                    context.ExecuteCommandBuffer(cmd);
+                    cmd.Clear();
+                    //  normal draw
+                    DrawingSettings drawingSettings = CreateDrawingSettings(shaderTagIdList, ref renderingData, renderingData.cameraData.defaultOpaqueSortFlags);
+                    drawingSettings.overrideMaterial = normalsMaterial;
+                    context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref filteringSettings);
+                    // occlusion draw
+                    DrawingSettings occluderSettings = CreateDrawingSettings(shaderTagIdList, ref renderingData, renderingData.cameraData.defaultOpaqueSortFlags);
+                    occluderSettings.overrideMaterial = occluderMaterial;
+                    //context.DrawRenderers(renderingData.cullResults, ref occluderSettings, ref occluderFilteringSettings);
+                }
+                context.ExecuteCommandBuffer(cmd);
+                CommandBufferPool.Release(cmd);
+            }
+            public override void OnCameraCleanup(CommandBuffer cmd)
+            {
+                cmd.ReleaseTemporaryRT(normals.id);
+            }
         }
         #endregion
 
@@ -57,10 +103,43 @@ namespace CondorHalcon.URPRenderFeatures
             private RenderTargetIdentifier cameraColorTarget;
             private RenderTargetIdentifier temporaryBuffer;
             private int temporaryBufferID = Shader.PropertyToID("_TemporaryBuffer");
-            public ScreenSpaceOutlinesPass(RenderPassEvent renderPassEvent, ScreenSpaceOutlinesSettings settings, Shader shader) { }
-            public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData) { }
-            public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData) { }
-            public override void OnCameraCleanup(CommandBuffer cmd) { }
+            public ScreenSpaceOutlinesPass(RenderPassEvent renderPassEvent, ScreenSpaceOutlinesSettings settings, Shader shader)
+            {
+                this.renderPassEvent = renderPassEvent;
+                this.outlineMaterial = new Material(shader);
+                this.outlineMaterial.SetColor("_OutlineColor", settings.outlineColor);
+                this.outlineMaterial.SetFloat("_OutlineScale", settings.outlineScale);
+                this.outlineMaterial.SetFloat("_RobertsCrossMultiplier", settings.robertsCrossMultiplier);
+                this.outlineMaterial.SetFloat("_DepthThreshold", settings.depthThreshold);
+                this.outlineMaterial.SetFloat("_NormalThreshold", settings.normalThreshold);
+                this.outlineMaterial.SetFloat("_SteepAngleThreshold", settings.steepAngleThreshold);
+                this.outlineMaterial.SetFloat("_SteepAngleMultiplier", settings.steepAngleMultiplier);
+            }
+            public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
+            {
+                cameraColorTarget = renderingData.cameraData.renderer.cameraColorTarget;
+
+                RenderTextureDescriptor temporaryTextureDescriptor = renderingData.cameraData.cameraTargetDescriptor;
+                cmd.GetTemporaryRT(temporaryBufferID, temporaryTextureDescriptor, FilterMode.Point);
+                temporaryBuffer = new RenderTargetIdentifier(temporaryBufferID);
+            }
+            public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
+            {
+                if (!outlineMaterial) { return; }
+
+                CommandBuffer cmd = CommandBufferPool.Get();
+                using (new ProfilingScope(cmd, new ProfilingSampler("ScreenSpaceOutlines")))
+                {
+                    Blit(cmd, cameraColorTarget, temporaryBuffer);
+                    Blit(cmd, temporaryBuffer, cameraColorTarget, outlineMaterial);
+                }
+                context.ExecuteCommandBuffer(cmd);
+                CommandBufferPool.Release(cmd);
+            }
+            public override void OnCameraCleanup(CommandBuffer cmd)
+            {
+                cmd.ReleaseTemporaryRT(temporaryBufferID);
+            }
         }
         #endregion
 
@@ -77,7 +156,6 @@ namespace CondorHalcon.URPRenderFeatures
         // pass instances
         private ViewSpaceNormalsTexturePass viewSpaceNormalsTexturePass;
         private ScreenSpaceOutlinesPass screenSpaceOutlinePass;
-
 
         public override void Create()
         {

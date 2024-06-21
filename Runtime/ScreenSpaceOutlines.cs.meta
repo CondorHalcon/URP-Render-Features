@@ -8,7 +8,7 @@ MonoImporter:
       type: 3}
   - viewSpaceOccluderShader: {fileID: -6465566751694194690, guid: 146da170ad5a23d44ba4af4bd4480aa6,
       type: 3}
-  - screenSpaceOutlineShader: {fileID: -6465566751694194690, guid: a70164cf0990ef34f868782a22079921,
+  - screenSpaceOutlineShader: {fileID: -6465566751694194690, guid: 1ddf91505c98d3848b556e711898ed6a,
       type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
