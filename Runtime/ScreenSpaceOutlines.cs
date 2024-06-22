@@ -16,7 +16,7 @@ namespace CondorHalcon.URPRenderFeatures
             [SerializeField] internal int depthBufferBits = 8;
             [SerializeField] internal FilterMode filterMode = FilterMode.Point;
             [SerializeField] internal Color backgroundColor = Color.white;
-            [SerializeField] internal FilteringSettings filteringSettings = FilteringSettings.defaultValue;
+            [SerializeField, Range(-1, 0)] internal float remapMin = 0;
         }
         [System.Serializable]
         private class ScreenSpaceOutlinesSettings
@@ -54,9 +54,10 @@ namespace CondorHalcon.URPRenderFeatures
                 this.settings = settings;
                 this.normals.Init("_SceneViewSpaceNormals");
                 this.normalsMaterial = new Material(shader);
+                this.normalsMaterial.SetFloat("_RemapMin", settings.remapMin);
                 this.filteringSettings = new FilteringSettings(RenderQueueRange.opaque, layerMask);
                 this.occluderMaterial = new Material(occluderShader);
-                this.occluderFilteringSettings = new FilteringSettings(RenderQueueRange.opaque, (LayerMask)int.MaxValue);
+                this.occluderFilteringSettings = new FilteringSettings(RenderQueueRange.opaque, (LayerMask)~layerMask);
             }
             public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
             {
@@ -74,7 +75,7 @@ namespace CondorHalcon.URPRenderFeatures
 
                 DrawingSettings drawingSettings = CreateDrawingSettings(shaderTagIdList, ref renderingData, (SortingCriteria)6);
                 drawingSettings.overrideMaterial = normalsMaterial;
-                DrawingSettings occluderSettings = CreateDrawingSettings(shaderTagIdList, ref renderingData, renderingData.cameraData.defaultOpaqueSortFlags);
+                DrawingSettings occluderSettings = CreateDrawingSettings(shaderTagIdList, ref renderingData, (SortingCriteria)6);
                 occluderSettings.overrideMaterial = occluderMaterial;
 
                 CommandBuffer cmd = CommandBufferPool.Get();
@@ -85,7 +86,7 @@ namespace CondorHalcon.URPRenderFeatures
                     //  normals draw
                     context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref filteringSettings);
                     // occlusion draw
-                    //context.DrawRenderers(renderingData.cullResults, ref occluderSettings, ref occluderFilteringSettings);
+                    context.DrawRenderers(renderingData.cullResults, ref occluderSettings, ref occluderFilteringSettings);
                 }
                 context.ExecuteCommandBuffer(cmd);
                 CommandBufferPool.Release(cmd);

@@ -1,22 +1,22 @@
 {
-	"name": "com.condorhalcon.urp-render-features",
-	"version": "0.0.1",
-	"displayName": "URP Render Features",
-	"description": "This is a collection of Unity URP render features built by CondorHalcon",
-	"keywords": [
-		"URP Render Feature",
-		"URP",
-		"Render",
-		"Features",
-		"CondorHalcon"
-	],
-	"author": {
-		"name": "CondorHalcon",
-		"email": "judahhawi@condorhalcon.com",
-		"url": "https://www.condorhalcon.com"
-	},
-	"unity": "2021.3",
-	"dependencies": {
-		"com.unity.render-pipelines.universal": "12.1.7"
-	}
+  "name": "com.condorhalcon.urp-render-features",
+  "version": "0.1.0",
+  "displayName": "URP Render Features",
+  "description": "This is a collection of Unity URP render features built by CondorHalcon",
+  "keywords": [
+    "URP Render Feature",
+    "URP",
+    "Render",
+    "Features",
+    "CondorHalcon"
+  ],
+  "author": {
+    "name": "CondorHalcon",
+    "email": "judahhawi@condorhalcon.com",
+    "url": "https://www.condorhalcon.com"
+  },
+  "unity": "2021.3",
+  "dependencies": {
+    "com.unity.render-pipelines.universal": "12.1.7"
+  }
 }
