@@ -71,18 +71,20 @@ namespace CondorHalcon.URPRenderFeatures
             public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
             {
                 if (!normalsMaterial) { return; }
+
+                DrawingSettings drawingSettings = CreateDrawingSettings(shaderTagIdList, ref renderingData, (SortingCriteria)6);
+                drawingSettings.overrideMaterial = normalsMaterial;
+                DrawingSettings occluderSettings = CreateDrawingSettings(shaderTagIdList, ref renderingData, renderingData.cameraData.defaultOpaqueSortFlags);
+                occluderSettings.overrideMaterial = occluderMaterial;
+
                 CommandBuffer cmd = CommandBufferPool.Get();
                 using (new ProfilingScope(cmd, new ProfilingSampler("SceneViewSpaceNormalsTexture")))
                 {
                     context.ExecuteCommandBuffer(cmd);
                     cmd.Clear();
-                    //  normal draw
-                    DrawingSettings drawingSettings = CreateDrawingSettings(shaderTagIdList, ref renderingData, renderingData.cameraData.defaultOpaqueSortFlags);
-                    drawingSettings.overrideMaterial = normalsMaterial;
+                    //  normals draw
                     context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref filteringSettings);
                     // occlusion draw
-                    DrawingSettings occluderSettings = CreateDrawingSettings(shaderTagIdList, ref renderingData, renderingData.cameraData.defaultOpaqueSortFlags);
-                    occluderSettings.overrideMaterial = occluderMaterial;
                     //context.DrawRenderers(renderingData.cullResults, ref occluderSettings, ref occluderFilteringSettings);
                 }
                 context.ExecuteCommandBuffer(cmd);
