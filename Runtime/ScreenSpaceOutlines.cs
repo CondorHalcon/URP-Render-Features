@@ -57,7 +57,8 @@ namespace CondorHalcon.URPRenderFeatures
                 this.normalsMaterial.SetFloat("_RemapMin", settings.remapMin);
                 this.filteringSettings = new FilteringSettings(RenderQueueRange.opaque, layerMask);
                 this.occluderMaterial = new Material(occluderShader);
-                this.occluderFilteringSettings = new FilteringSettings(RenderQueueRange.opaque, (LayerMask)~layerMask);
+                this.occluderMaterial.SetColor("_Color", settings.backgroundColor);
+                this.occluderFilteringSettings = new FilteringSettings(RenderQueueRange.opaque, ~layerMask);
             }
             public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
             {
