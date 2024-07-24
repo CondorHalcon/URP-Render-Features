@@ -1,6 +1,6 @@
 {
   "name": "com.condorhalcon.urp-render-features",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "displayName": "URP Render Features",
   "description": "This is a collection of Unity URP render features built by CondorHalcon",
   "keywords": [

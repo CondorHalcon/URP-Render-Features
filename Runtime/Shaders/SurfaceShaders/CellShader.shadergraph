@@ -5,7 +5,11 @@
     "m_Properties": [],
     "m_Keywords": [],
     "m_Dropdowns": [],
-    "m_CategoryData": [],
+    "m_CategoryData": [
+        {
+            "m_Id": "26c0857946e44e6e869ab4c1a2086d84"
+        }
+    ],
     "m_Nodes": [
         {
             "m_Id": "8a01eb0c5b214e2cafdc0cee2f43cc74"
@@ -58,7 +62,7 @@
         },
         "preventRotation": false
     },
-    "m_Path": "Shader Graphs",
+    "m_Path": "URP Render Features",
     "m_GraphPrecision": 1,
     "m_PreviewMode": 2,
     "m_OutputNode": {
@@ -102,6 +106,14 @@
         "m_SerializableColors": []
     },
     "m_SerializedDescriptor": "VertexDescription.Normal"
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.CategoryData",
+    "m_ObjectId": "26c0857946e44e6e869ab4c1a2086d84",
+    "m_Name": "",
+    "m_ChildObjectList": []
 }
 
 {
